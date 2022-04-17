@@ -1,0 +1,53 @@
+version: '3.8'
+services:
+#  mongo:
+#    container_name: shortener-mongo
+#    hostname: mongo
+#    restart: always
+#    image: mongo:4.4
+#    ports:
+#      - '27017:27017'
+#    volumes:
+#      - mongodb:/data/db
+#    networks:
+#      - backend
+#
+#  redis:
+#    container_name: shortener-redis
+#    hostname: redis
+#    image: redis:6.2-alpine
+#    restart: always
+#    ports:
+#      - '6379:6379'
+#    volumes:
+#      - cache:/data
+#    networks:
+#      - backend
+
+  api:
+    env_file:
+      - ./deploy/local.env
+    build: .
+#    image: api-shortener
+#    command: go run app/main.go
+#    restart: always
+    ports:
+      - "5000"
+    networks:
+      - "api-network"
+    deploy:
+      replicas: 3
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+    networks:
+      - "api-network"
+
+networks:
+  api-network:
