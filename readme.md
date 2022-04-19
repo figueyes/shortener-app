@@ -31,9 +31,11 @@ Non functional requirements
 
 ### Shortening Algorithm
 to perform a good shortened url, I am going to build a function with the most large entropy as possible, considering:
-- Hashing the initial input. I will use SHA-256.
-- Encoding the binary result to text. I will use BASE-58 encoding.
-
+- The input is a concatenation of url to short + user.
+- Hashing the initial input. I will use SHA-256 with length of 32 bits and no-collisions found.
+- Encoding the binary result to text. I will use BASE-58 encoding to reduce the output confusion (Satoshi Nakamoto, https://en.bitcoin.it/wiki/Base58Check_encoding).
+- The final output will be of length 7 as default (58ˆ7 possibles ≈ 2.2 trillions). The App supports length configuration.
+- Better experience to users: readable shortened url.
 
 ## Architecture
 General Diagram
