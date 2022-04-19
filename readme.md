@@ -3,24 +3,24 @@ By @figueyes
 
 ## Architecture
 
-Shortener algorithms
-sha256
+General Diagram
 
+<img src="./assets/shortener-app.architecture.png" alt="creation"/>
 
 ## Config
 First, you need to configure an .env file with example.env variables 
 ### Dependencies
 #### mongo
-- host: localhost
+- configure a local database with localhost:[PORT] database and collection=shorts
 
 #### redis
-- addr: localhost 
-- db: 0
+- configure a local database with localhost:[PORT] and db:0 
+  1. cache database
+  2. pub/sub to remove from cache
 #### kafka
-- broker: localhost
+- configure kafka broker to publish message about observability
 - topics:
   1. observer of data
-  2. remover of cached data
 #### zookeeper
 - kafka dependence
 
