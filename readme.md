@@ -78,8 +78,14 @@ First, you need to configure an .env file with example.env variables
 - kafka dependence
 
 ## Running 
+With Docker:
 ```
-go run src/main.go
+docker-compose up -d
+```
+
+build environment before:
+```
+go run app/main.go
 ```
 
 ## Endpoints

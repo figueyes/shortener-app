@@ -1,53 +1,63 @@
 version: '3.8'
 services:
-#  mongo:
-#    container_name: shortener-mongo
-#    hostname: mongo
-#    restart: always
-#    image: mongo:4.4
-#    ports:
-#      - '27017:27017'
-#    volumes:
-#      - mongodb:/data/db
-#    networks:
-#      - backend
-#
-#  redis:
-#    container_name: shortener-redis
-#    hostname: redis
-#    image: redis:6.2-alpine
-#    restart: always
-#    ports:
-#      - '6379:6379'
-#    volumes:
-#      - cache:/data
-#    networks:
-#      - backend
-
+  mongo:
+    restart: always
+    image: mongo:4.4
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb:/data/db
+  redis:
+    restart: always
+    image: redis:6.2-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - cache:/data
   api:
     env_file:
-      - ./deploy/local.env
-    build: .
-#    image: api-shortener
-#    command: go run app/main.go
-#    restart: always
+      - .env
+    environment:
+      SHORTENER_MONGODB_HOST: mongo
+      SHORTENER_REDIS_HOST: redis
+      SHORTENER_KAFKA_BROKER: kafka:9092
+    build:
+      context: ./
+      target: production
+    links:
+      - mongo:mongo
+      - redis:redis
+      - kafka:kafka
+    image: golang:shortener-app
+    command: go run app/main.go
+    restart: always
     ports:
-      - "5000"
-    networks:
-      - "api-network"
-    deploy:
-      replicas: 3
+      - "3000:3000"
 
-  nginx:
-    image: nginx:latest
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  zookeeper:
+    restart: always
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+  kafka-push:
+    restart: always
+    image: spanglishing/kafka-push:15
+    ports:
+      - "8089:8089"
+    environment:
+      KAFKA_BROKERS: kafka:9092
+  kafka:
+    restart: always
+    image: confluentinc/cp-kafka:latest
     depends_on:
-      - api
+      - zookeeper
     ports:
-      - "80:80"
-    networks:
-      - "api-network"
-
-networks:
-  api-network:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      TOPIC_AUTO_CREATE: 1
+volumes:
+  cache:
+  mongodb:
