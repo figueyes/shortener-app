@@ -37,28 +37,75 @@ to perform a good shortened url, I am going to build a function with the most la
 - The final output will be of length 7 as default (58ˆ7 possibles ≈ 2.2 trillions). The App supports length configuration.
 - Better experience to users: readable shortened url.
 
+
 ## Architecture
 General Diagram
 
-<img src="./assets/shortener-app.architecture.png" alt="creation"/>
+<img src="./assets/shortener-app.architecture.png" alt="architecture"/>
 
 ### Technologies
 #### Database - MONGO
- - I will store 26 billions shortened urls.
- - the service will read database heavily and this should be fast.
- - I need to scale database services easily and fast.
- - The only one relation will be with user or ID url creator
- 
+- I will store 26 billions shortened urls.
+- the service will read database heavily and this should be fast.
+- I need to scale database services easily and fast.
+- The only one relation will be with user or ID url creator
+
 #### Cache - REDIS
 - I need cache to speed up reading the most clicked urls to increase performance.
-**challenges**:
+  **challenges**:
 - if I update a component in my url, but this url is stored in cache, What about this element?
 - Redis has a pub-sub component to communicate between nodes. Then, if we modify an element in database, I can to notify to every-nodes that an element has been updated and remove it from cache.
 
 #### Broker - KAFKA
-After reading request, I need to deliver information about it to analytical component like Kibana or another api/bff with important elements like time request, url, http status (301 successfully redirected, 400 bad request, etc). 
+After reading request, I need to deliver information about it to analytical component like Kibana or another api/bff with important elements like time request, url, http status (301 successfully redirected, 400 bad request, etc).
 - kafka performs data in realtime.
 - multiple consumers (with different id) may read messages from a specific topic.
+
+
+## API
+
+### Creation shortened URL
+
+**POST** /shortener/
+
+Body:
+- url: string
+- user: string
+
+Response:
+- status: 200 success | 400 bad request
+- short_url: string
+
+<img src="./assets/Shortener-App-architecture-creation.png" alt="creation">
+
+
+### Reading URL
+
+**GET** /shortener/:short-url
+
+Response:
+- status: 301 success and redirect | 404 Not found
+- url
+
+<img src="./assets/Shortener-App-architecture-read.png" alt="reading">
+
+### Modify component 
+
+**PATCH** /shortener/:short-url
+
+Body:
+- url: string, optional
+- user: string, optional
+- is_enable: bool, optional
+
+Response:
+- status: 200
+- short_url: string
+  original_url: string
+  is_enable: bool
+  user: string
+
+<img src="./assets/Shortener-App-architecture-modify.png" alt="modify">
 
 ## Config
 First, you need to configure an .env file with example.env variables 
@@ -82,39 +129,3 @@ With Docker:
 ```
 docker-compose up -d
 ```
-
-build environment before:
-```
-go run app/main.go
-```
-
-## Endpoints
-**POST** /shortener/
-
-Body: 
- - url: string
- - user: string
-
-Response: 
- - status: 200
- - short_url: string
-
-**GET** /shortener/:short-url
-
-Response:
-- status: 301
-- url
-
-**PATCH** /shortener/:short-url
-
-Body:
-- url: string, optional
-- user: string, optional
-- is_enable: bool, optional
-
-Response:
-- status: 200
-- short_url: string
-  original_url: string
-  is_enable: bool
-  user: string
